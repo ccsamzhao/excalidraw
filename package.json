@@ -115,6 +115,7 @@
     "test:update": "yarn test:app --updateSnapshot --watchAll=false",
     "test": "yarn test:app",
     "serve": "serve ./build -l 3000",
+    "deploy": "firebase deploy",
     "autorelease": "node scripts/autorelease.js",
     "prerelease": "node scripts/prerelease.js",
     "release": "node scripts/release.js"
