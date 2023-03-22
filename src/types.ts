@@ -13,6 +13,7 @@ import {
   FileId,
   ExcalidrawImageElement,
   Theme,
+  StrokeRoundness,
 } from "./element/types";
 import { SHAPES } from "./shapes";
 import { Point as RoughPoint } from "roughjs/bin/geometry";
@@ -29,6 +30,9 @@ import { MaybeTransformHandleType } from "./element/transformHandles";
 import Library from "./data/library";
 import type { FileSystemHandle } from "./data/filesystem";
 import type { ALLOWED_IMAGE_MIME_TYPES, MIME_TYPES } from "./constants";
+import { ContextMenuItems } from "./components/ContextMenu";
+import { Merge, ForwardRef } from "./utility-types";
+import React from "react";
 
 export type Point = Readonly<RoughPoint>;
 
@@ -61,16 +65,27 @@ export type BinaryFileData = {
     | typeof MIME_TYPES.binary;
   id: FileId;
   dataURL: DataURL;
+  /**
+   * Epoch timestamp in milliseconds
+   */
   created: number;
+  /**
+   * Indicates when the file was last retrieved from storage to be loaded
+   * onto the scene. We use this flag to determine whether to delete unused
+   * files from storage.
+   *
+   * Epoch timestamp in milliseconds.
+   */
+  lastRetrieved?: number;
 };
 
 export type BinaryFileMetadata = Omit<BinaryFileData, "dataURL">;
 
 export type BinaryFiles = Record<ExcalidrawElement["id"], BinaryFileData>;
 
-export type LastActiveToolBeforeEraser =
+export type LastActiveTool =
   | {
-      type: typeof SHAPES[number]["value"] | "eraser";
+      type: typeof SHAPES[number]["value"] | "eraser" | "hand";
       customType: null;
     }
   | {
@@ -78,9 +93,16 @@ export type LastActiveToolBeforeEraser =
       customType: string;
     }
   | null;
+
 export type AppState = {
+  contextMenu: {
+    items: ContextMenuItems;
+    top: number;
+    left: number;
+  } | null;
+  showWelcomeScreen: boolean;
   isLoading: boolean;
-  errorMessage: string | null;
+  errorMessage: React.ReactNode;
   draggingElement: NonDeletedExcalidrawElement | null;
   resizingElement: NonDeletedExcalidrawElement | null;
   multiElement: NonDeleted<ExcalidrawLinearElement> | null;
@@ -92,19 +114,23 @@ export type AppState = {
   // (e.g. text element when typing into the input)
   editingElement: NonDeletedExcalidrawElement | null;
   editingLinearElement: LinearElementEditor | null;
-  activeTool:
+  activeTool: {
+    /**
+     * indicates a previous tool we should revert back to if we deselect the
+     * currently active tool. At the moment applies to `eraser` and `hand` tool.
+     */
+    lastActiveTool: LastActiveTool;
+    locked: boolean;
+  } & (
     | {
-        type: typeof SHAPES[number]["value"] | "eraser";
-        lastActiveToolBeforeEraser: LastActiveToolBeforeEraser;
-        locked: boolean;
+        type: typeof SHAPES[number]["value"] | "eraser" | "hand";
         customType: null;
       }
     | {
         type: "custom";
         customType: string;
-        lastActiveToolBeforeEraser: LastActiveToolBeforeEraser;
-        locked: boolean;
-      };
+      }
+  );
   penMode: boolean;
   penDetected: boolean;
   exportBackground: boolean;
@@ -121,10 +147,9 @@ export type AppState = {
   currentItemFontFamily: FontFamilyValues;
   currentItemFontSize: number;
   currentItemTextAlign: TextAlign;
-  currentItemStrokeSharpness: ExcalidrawElement["strokeSharpness"];
   currentItemStartArrowhead: Arrowhead | null;
   currentItemEndArrowhead: Arrowhead | null;
-  currentItemLinearStrokeSharpness: ExcalidrawElement["strokeSharpness"];
+  currentItemRoundness: StrokeRoundness;
   viewBackgroundColor: string;
   scrollX: number;
   scrollY: number;
@@ -134,17 +159,21 @@ export type AppState = {
   isResizing: boolean;
   isRotating: boolean;
   zoom: Zoom;
+  // mobile-only
   openMenu: "canvas" | "shape" | null;
   openPopup:
     | "canvasColorPicker"
     | "backgroundColorPicker"
     | "strokeColorPicker"
     | null;
+  openSidebar: "library" | "customSidebar" | null;
+  openDialog: "imageExport" | "help" | "jsonExport" | null;
+  isSidebarDocked: boolean;
+
   lastPointerDownWith: PointerType;
   selectedElementIds: { [id: string]: boolean };
   previousSelectedElementIds: { [id: string]: boolean };
   shouldCacheIgnoreZoom: boolean;
-  showHelpDialog: boolean;
   toast: { message: string; closable?: boolean; duration?: number } | null;
   zenModeEnabled: boolean;
   theme: Theme;
@@ -161,8 +190,6 @@ export type AppState = {
   offsetTop: number;
   offsetLeft: number;
 
-  isLibraryOpen: boolean;
-  isLibraryMenuDocked: boolean;
   fileHandle: FileSystemHandle | null;
   collaborators: Map<string, Collaborator>;
   showStats: boolean;
@@ -266,7 +293,6 @@ export interface ExcalidrawProps {
     | null
     | Promise<ExcalidrawInitialDataState | null>;
   excalidrawRef?: ForwardRef<ExcalidrawAPIRefValue>;
-  onCollabButtonClick?: () => void;
   isCollaborating?: boolean;
   onPointerUpdate?: (payload: {
     pointer: { x: number; y: number };
@@ -281,7 +307,6 @@ export interface ExcalidrawProps {
     isMobile: boolean,
     appState: AppState,
   ) => JSX.Element | null;
-  renderFooter?: (isMobile: boolean, appState: AppState) => JSX.Element | null;
   langCode?: Language["code"];
   viewModeEnabled?: boolean;
   zenModeEnabled?: boolean;
@@ -293,10 +318,7 @@ export interface ExcalidrawProps {
     elements: readonly NonDeletedExcalidrawElement[],
     appState: AppState,
   ) => JSX.Element;
-  UIOptions?: {
-    dockedSidebarBreakpoint?: number;
-    canvasActions?: CanvasActions;
-  };
+  UIOptions?: Partial<UIOptions>;
   detectScroll?: boolean;
   handleKeyboardGlobally?: boolean;
   onLibraryChange?: (libraryItems: LibraryItems) => void | Promise<any>;
@@ -313,6 +335,11 @@ export interface ExcalidrawProps {
     pointerDownState: PointerDownState,
   ) => void;
   onScrollChange?: (scrollX: number, scrollY: number) => void;
+  /**
+   * Render function that renders custom <Sidebar /> component.
+   */
+  renderSidebar?: () => JSX.Element | null;
+  children?: React.ReactNode;
 }
 
 export type SceneData = {
@@ -344,26 +371,40 @@ export type ExportOpts = {
   ) => JSX.Element;
 };
 
-type CanvasActions = {
-  changeViewBackgroundColor?: boolean;
-  clearCanvas?: boolean;
-  export?: false | ExportOpts;
-  loadScene?: boolean;
-  saveToActiveFile?: boolean;
-  theme?: boolean;
-  saveAsImage?: boolean;
-};
+// NOTE at the moment, if action name coressponds to canvasAction prop, its
+// truthiness value will determine whether the action is rendered or not
+// (see manager renderAction). We also override canvasAction values in
+// excalidraw package index.tsx.
+type CanvasActions = Partial<{
+  changeViewBackgroundColor: boolean;
+  clearCanvas: boolean;
+  export: false | ExportOpts;
+  loadScene: boolean;
+  saveToActiveFile: boolean;
+  toggleTheme: boolean | null;
+  saveAsImage: boolean;
+}>;
+
+type UIOptions = Partial<{
+  dockedSidebarBreakpoint: number;
+  canvasActions: CanvasActions;
+  /** @deprecated does nothing. Will be removed in 0.15 */
+  welcomeScreen?: boolean;
+}>;
 
 export type AppProps = Merge<
   ExcalidrawProps,
   {
-    UIOptions: {
-      canvasActions: Required<CanvasActions> & { export: ExportOpts };
-      dockedSidebarBreakpoint?: number;
-    };
+    UIOptions: Merge<
+      UIOptions,
+      {
+        canvasActions: Required<CanvasActions> & { export: ExportOpts };
+      }
+    >;
     detectScroll: boolean;
     handleKeyboardGlobally: boolean;
     isCollaborating: boolean;
+    children?: React.ReactNode;
   }
 >;
 
@@ -384,6 +425,7 @@ export type AppClassProperties = {
   files: BinaryFiles;
   device: App["device"];
   scene: App["scene"];
+  pasteFromClipboard: App["pasteFromClipboard"];
 };
 
 export type PointerDownState = Readonly<{
@@ -475,6 +517,7 @@ export type ExcalidrawImperativeAPI = {
   setActiveTool: InstanceType<typeof App>["setActiveTool"];
   setCursor: InstanceType<typeof App>["setCursor"];
   resetCursor: InstanceType<typeof App>["resetCursor"];
+  toggleMenu: InstanceType<typeof App>["toggleMenu"];
 };
 
 export type Device = Readonly<{

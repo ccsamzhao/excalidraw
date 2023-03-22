@@ -11,7 +11,7 @@ import {
   Arrowhead,
   ExcalidrawFreeDrawElement,
   FontFamilyValues,
-  ExcalidrawRectangleElement,
+  ExcalidrawTextContainer,
 } from "../element/types";
 import { getFontString, getUpdatedTimestamp, isTestEnv } from "../utils";
 import { randomInteger, randomId } from "../random";
@@ -21,8 +21,19 @@ import { AppState } from "../types";
 import { getElementAbsoluteCoords } from ".";
 import { adjustXYWithRotation } from "../math";
 import { getResizedElementAbsoluteCoords } from "./bounds";
-import { getContainerElement, measureText, wrapText } from "./textElement";
-import { BOUND_TEXT_PADDING, VERTICAL_ALIGN } from "../constants";
+import {
+  getBoundTextElementOffset,
+  getContainerDims,
+  getContainerElement,
+  measureText,
+  normalizeText,
+  wrapText,
+  getMaxContainerWidth,
+  getDefaultLineHeight,
+} from "./textElement";
+import { VERTICAL_ALIGN } from "../constants";
+import { isArrowElement } from "./typeChecks";
+import { MarkOptional, Merge, Mutable } from "../utility-types";
 
 type ElementConstructorOpts = MarkOptional<
   Omit<ExcalidrawGenericElement, "id" | "type" | "isDeleted" | "updated">,
@@ -53,14 +64,15 @@ const _newElementBase = <T extends ExcalidrawElement>(
     height = 0,
     angle = 0,
     groupIds = [],
-    strokeSharpness,
+    roundness = null,
     boundElements = null,
     link = null,
     locked,
     ...rest
   }: ElementConstructorOpts & Omit<Partial<ExcalidrawGenericElement>, "type">,
 ) => {
-  const element = {
+  // assign type to guard against excess properties
+  const element: Merge<ExcalidrawGenericElement, { type: T["type"] }> = {
     id: rest.id || randomId(),
     type,
     x,
@@ -76,7 +88,7 @@ const _newElementBase = <T extends ExcalidrawElement>(
     roughness,
     opacity,
     groupIds,
-    strokeSharpness,
+    roundness,
     seed: rest.seed ?? randomInteger(),
     version: rest.version || 1,
     versionNonce: rest.versionNonce ?? 0,
@@ -125,15 +137,18 @@ export const newTextElement = (
     fontFamily: FontFamilyValues;
     textAlign: TextAlign;
     verticalAlign: VerticalAlign;
-    containerId?: ExcalidrawRectangleElement["id"];
+    containerId?: ExcalidrawTextContainer["id"];
+    lineHeight?: ExcalidrawTextElement["lineHeight"];
   } & ElementConstructorOpts,
 ): NonDeleted<ExcalidrawTextElement> => {
-  const metrics = measureText(opts.text, getFontString(opts));
+  const lineHeight = opts.lineHeight || getDefaultLineHeight(opts.fontFamily);
+  const text = normalizeText(opts.text);
+  const metrics = measureText(text, getFontString(opts), lineHeight);
   const offsets = getTextElementPositionOffsets(opts, metrics);
   const textElement = newElementWith(
     {
       ..._newElementBase<ExcalidrawTextElement>("text", opts),
-      text: opts.text,
+      text,
       fontSize: opts.fontSize,
       fontFamily: opts.fontFamily,
       textAlign: opts.textAlign,
@@ -142,9 +157,9 @@ export const newTextElement = (
       y: opts.y - offsets.y,
       width: metrics.width,
       height: metrics.height,
-      baseline: metrics.baseline,
       containerId: opts.containerId || null,
-      originalText: opts.text,
+      originalText: text,
+      lineHeight,
     },
     {},
   );
@@ -159,18 +174,14 @@ const getAdjustedDimensions = (
   y: number;
   width: number;
   height: number;
-  baseline: number;
 } => {
-  let maxWidth = null;
   const container = getContainerElement(element);
-  if (container) {
-    maxWidth = container.width - BOUND_TEXT_PADDING * 2;
-  }
-  const {
-    width: nextWidth,
-    height: nextHeight,
-    baseline: nextBaseline,
-  } = measureText(nextText, getFontString(element), maxWidth);
+
+  const { width: nextWidth, height: nextHeight } = measureText(
+    nextText,
+    getFontString(element),
+    element.lineHeight,
+  );
   const { textAlign, verticalAlign } = element;
   let x: number;
   let y: number;
@@ -182,7 +193,7 @@ const getAdjustedDimensions = (
     const prevMetrics = measureText(
       element.text,
       getFontString(element),
-      maxWidth,
+      element.lineHeight,
     );
     const offsets = getTextElementPositionOffsets(element, {
       width: nextWidth - prevMetrics.width,
@@ -224,15 +235,21 @@ const getAdjustedDimensions = (
   // make sure container dimensions are set properly when
   // text editor overflows beyond viewport dimensions
   if (container) {
-    let height = container.height;
-    let width = container.width;
-    if (nextHeight > height - BOUND_TEXT_PADDING * 2) {
-      height = nextHeight + BOUND_TEXT_PADDING * 2;
+    const boundTextElementPadding = getBoundTextElementOffset(element);
+
+    const containerDims = getContainerDims(container);
+    let height = containerDims.height;
+    let width = containerDims.width;
+    if (nextHeight > height - boundTextElementPadding * 2) {
+      height = nextHeight + boundTextElementPadding * 2;
     }
-    if (nextWidth > width - BOUND_TEXT_PADDING * 2) {
-      width = nextWidth + BOUND_TEXT_PADDING * 2;
+    if (nextWidth > width - boundTextElementPadding * 2) {
+      width = nextWidth + boundTextElementPadding * 2;
     }
-    if (height !== container.height || width !== container.width) {
+    if (
+      !isArrowElement(container) &&
+      (height !== containerDims.height || width !== containerDims.width)
+    ) {
       mutateElement(container, { height, width });
     }
   }
@@ -241,12 +258,27 @@ const getAdjustedDimensions = (
     height: nextHeight,
     x: Number.isFinite(x) ? x : element.x,
     y: Number.isFinite(y) ? y : element.y,
-    baseline: nextBaseline,
   };
 };
 
+export const refreshTextDimensions = (
+  textElement: ExcalidrawTextElement,
+  text = textElement.text,
+) => {
+  const container = getContainerElement(textElement);
+  if (container) {
+    text = wrapText(
+      text,
+      getFontString(textElement),
+      getMaxContainerWidth(container),
+    );
+  }
+  const dimensions = getAdjustedDimensions(textElement, text);
+  return { text, ...dimensions };
+};
+
 export const updateTextElement = (
-  element: ExcalidrawTextElement,
+  textElement: ExcalidrawTextElement,
   {
     text,
     isDeleted,
@@ -257,16 +289,10 @@ export const updateTextElement = (
     originalText: string;
   },
 ): ExcalidrawTextElement => {
-  const container = getContainerElement(element);
-  if (container) {
-    text = wrapText(text, getFontString(element), container.width);
-  }
-  const dimensions = getAdjustedDimensions(element, text);
-  return newElementWith(element, {
-    text,
+  return newElementWith(textElement, {
     originalText,
-    isDeleted: isDeleted ?? element.isDeleted,
-    ...dimensions,
+    isDeleted: isDeleted ?? textElement.isDeleted,
+    ...refreshTextDimensions(textElement, originalText),
   });
 };
 
@@ -308,6 +334,9 @@ export const newLinearElement = (
 export const newImageElement = (
   opts: {
     type: ExcalidrawImageElement["type"];
+    status?: ExcalidrawImageElement["status"];
+    fileId?: ExcalidrawImageElement["fileId"];
+    scale?: ExcalidrawImageElement["scale"];
   } & ElementConstructorOpts,
 ): NonDeleted<ExcalidrawImageElement> => {
   return {
@@ -315,9 +344,9 @@ export const newImageElement = (
     // in the future we'll support changing stroke color for some SVG elements,
     // and `transparent` will likely mean "use original colors of the image"
     strokeColor: "transparent",
-    status: "pending",
-    fileId: null,
-    scale: [1, 1],
+    status: opts.status ?? "pending",
+    fileId: opts.fileId ?? null,
+    scale: opts.scale ?? [1, 1],
   };
 };
 
@@ -337,7 +366,8 @@ export const deepCopyElement = (val: any, depth: number = 0) => {
         : {};
     for (const key in val) {
       if (val.hasOwnProperty(key)) {
-        // don't copy top-level shape property, which we want to regenerate
+        // don't copy non-serializable objects like these caches. They'll be
+        // populated when the element is rendered.
         if (depth === 0 && (key === "shape" || key === "canvas")) {
           continue;
         }
@@ -380,6 +410,7 @@ export const duplicateElement = <TElement extends Mutable<ExcalidrawElement>>(
   overrides?: Partial<TElement>,
 ): TElement => {
   let copy: TElement = deepCopyElement(element);
+
   if (isTestEnv()) {
     copy.id = `${copy.id}_copy`;
     // `window.h` may not be defined in some unit tests
@@ -393,6 +424,7 @@ export const duplicateElement = <TElement extends Mutable<ExcalidrawElement>>(
   } else {
     copy.id = randomId();
   }
+  copy.boundElements = null;
   copy.updated = getUpdatedTimestamp();
   copy.seed = randomInteger();
   copy.groupIds = getNewGroupIdsForDuplication(
