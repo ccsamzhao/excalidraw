@@ -1,24 +1,26 @@
+import { queryByText } from "@testing-library/react";
 import ReactDOM from "react-dom";
 import ExcalidrawApp from "../excalidraw-app";
-import { GlobalTestState, render, screen } from "../tests/test-utils";
-import { Keyboard, Pointer, UI } from "../tests/helpers/ui";
 import { CODES, KEYS } from "../keys";
+import { Keyboard, Pointer, UI } from "../tests/helpers/ui";
 import {
   fireEvent,
+  GlobalTestState,
   mockBoundingClientRect,
+  render,
   restoreOriginalGetBoundingClientRect,
+  screen,
 } from "../tests/test-utils";
-import { queryByText } from "@testing-library/react";
 
 import { FONT_FAMILY, TEXT_ALIGN, VERTICAL_ALIGN } from "../constants";
+import { API } from "../tests/helpers/api";
+import { resize } from "../tests/utils";
+import { mutateElement } from "./mutateElement";
+import { getOriginalContainerHeightFromCache } from "./textWysiwyg";
 import {
   ExcalidrawTextElement,
   ExcalidrawTextElementWithContainer,
 } from "./types";
-import { API } from "../tests/helpers/api";
-import { mutateElement } from "./mutateElement";
-import { resize } from "../tests/utils";
-import { getOriginalContainerHeightFromCache } from "./textWysiwyg";
 
 // Unmount ReactDOM from root
 ReactDOM.unmountComponentAtNode(document.getElementById("root")!);
@@ -719,7 +721,7 @@ describe("textWysiwyg", () => {
       await new Promise((r) => setTimeout(r, 0));
       fireEvent.change(editor, { target: { value: "Hello World!" } });
       editor.blur();
-      expect(text.fontFamily).toEqual(FONT_FAMILY.Virgil);
+      expect(text.fontFamily).toEqual(FONT_FAMILY.Kalam);
       UI.clickTool("text");
 
       mouse.clickAt(
@@ -746,7 +748,7 @@ describe("textWysiwyg", () => {
       });
       expect(
         (h.elements[1] as ExcalidrawTextElementWithContainer).fontFamily,
-      ).toEqual(FONT_FAMILY.Virgil);
+      ).toEqual(FONT_FAMILY.Kalam);
 
       //redo
       Keyboard.withModifierKeys({ ctrl: true, shift: true }, () => {

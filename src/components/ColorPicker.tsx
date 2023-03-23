@@ -1,14 +1,14 @@
 import React from "react";
-import { Popover } from "./Popover";
 import { isTransparent } from "../utils";
+import { Popover } from "./Popover";
 
-import "./ColorPicker.scss";
-import { isArrowKey, KEYS } from "../keys";
-import { t, getLanguage } from "../i18n";
-import { isWritableElement } from "../utils";
 import colors from "../colors";
 import { ExcalidrawElement } from "../element/types";
+import { getLanguage, t } from "../i18n";
+import { isArrowKey, KEYS } from "../keys";
 import { AppState } from "../types";
+import { isWritableElement } from "../utils";
+import "./ColorPicker.scss";
 
 const MAX_CUSTOM_COLORS = 5;
 const MAX_DEFAULT_COLORS = 15;
@@ -377,7 +377,7 @@ export const ColorPicker = ({
           <button
             className="color-picker-label-swatch"
             aria-label={label}
-            style={color ? { "--swatch-color": color } : undefined}
+            style={color ? ({ "--swatch-color": color } as any) : undefined}
             onClick={() => setActive(!isActive)}
             ref={pickerButton}
           />

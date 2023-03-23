@@ -1,6 +1,6 @@
 import cssVariables from "./css/variables.module.scss";
-import { AppProps } from "./types";
 import { FontFamilyValues } from "./element/types";
+import { AppProps } from "./types";
 
 export const isDarwin = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
 export const isWindows = /^Win/.test(navigator.platform);
@@ -85,6 +85,7 @@ export const FONT_FAMILY = {
   Kalam: 1,
   Helvetica: 2,
   Cascadia: 3,
+  "Edu QLD Beginner": 4,
 };
 
 export const THEME = {

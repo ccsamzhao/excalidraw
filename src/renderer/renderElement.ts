@@ -1,36 +1,33 @@
-import {
-  ExcalidrawElement,
-  ExcalidrawLinearElement,
-  ExcalidrawTextElement,
-  Arrowhead,
-  NonDeletedExcalidrawElement,
-  ExcalidrawFreeDrawElement,
-  ExcalidrawImageElement,
-  ExcalidrawTextElementWithContainer,
-} from "../element/types";
-import {
-  isTextElement,
-  isLinearElement,
-  isFreeDrawElement,
-  isInitializedImageElement,
-  isArrowElement,
-  hasBoundTextElement,
-} from "../element/typeChecks";
-import {
-  getDiamondPoints,
-  getElementAbsoluteCoords,
-  getArrowheadPoints,
-} from "../element/bounds";
 import { RoughCanvas } from "roughjs/bin/canvas";
 import { Drawable, Options } from "roughjs/bin/core";
-import { RoughSVG } from "roughjs/bin/svg";
 import { RoughGenerator } from "roughjs/bin/generator";
+import { RoughSVG } from "roughjs/bin/svg";
+import {
+  getArrowheadPoints,
+  getDiamondPoints,
+  getElementAbsoluteCoords,
+} from "../element/bounds";
+import {
+  hasBoundTextElement,
+  isArrowElement,
+  isFreeDrawElement,
+  isInitializedImageElement,
+  isLinearElement,
+  isTextElement,
+} from "../element/typeChecks";
+import {
+  Arrowhead,
+  ExcalidrawElement,
+  ExcalidrawFreeDrawElement,
+  ExcalidrawImageElement,
+  ExcalidrawLinearElement,
+  ExcalidrawTextElement,
+  ExcalidrawTextElementWithContainer,
+  NonDeletedExcalidrawElement,
+} from "../element/types";
 
-import { RenderConfig } from "../scene/types";
-import { distance, getFontString, getFontFamilyString, isRTL } from "../utils";
-import { getCornerRadius, isPathALoop, isRightAngle } from "../math";
+import { getStroke, StrokeOptions } from "perfect-freehand";
 import rough from "roughjs/bin/rough";
-import { AppState, BinaryFiles, Zoom } from "../types";
 import { getDefaultAppState } from "../appState";
 import {
   BOUND_TEXT_PADDING,
@@ -39,7 +36,7 @@ import {
   MIME_TYPES,
   SVG_NS,
 } from "../constants";
-import { getStroke, StrokeOptions } from "perfect-freehand";
+import { LinearElementEditor } from "../element/linearElementEditor";
 import {
   getBoundTextElement,
   getContainerCoords,
@@ -48,7 +45,10 @@ import {
   getMaxContainerHeight,
   getMaxContainerWidth,
 } from "../element/textElement";
-import { LinearElementEditor } from "../element/linearElementEditor";
+import { getCornerRadius, isPathALoop, isRightAngle } from "../math";
+import { RenderConfig } from "../scene/types";
+import { AppState, BinaryFiles, Zoom } from "../types";
+import { distance, getFontFamilyString, getFontString, isRTL } from "../utils";
 
 // using a stronger invert (100% vs our regular 93%) and saturate
 // as a temp hack to make images in dark theme look closer to original
@@ -290,7 +290,7 @@ const drawElementOnCanvas = (
 
         // FIXME temporary hack
         context.textBaseline =
-          element.fontFamily === FONT_FAMILY.Virgil ||
+          element.fontFamily === FONT_FAMILY.Kalam ||
           element.fontFamily === FONT_FAMILY.Cascadia
             ? "ideographic"
             : "bottom";

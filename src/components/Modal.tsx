@@ -1,12 +1,12 @@
 import "./Modal.scss";
 
-import React, { useState, useLayoutEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 import clsx from "clsx";
-import { KEYS } from "../keys";
-import { useExcalidrawContainer, useDevice } from "./App";
-import { AppState } from "../types";
+import React, { useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { THEME } from "../constants";
+import { KEYS } from "../keys";
+import { AppState } from "../types";
+import { useDevice, useExcalidrawContainer } from "./App";
 
 export const Modal: React.FC<{
   className?: string;
@@ -47,7 +47,7 @@ export const Modal: React.FC<{
       ></div>
       <div
         className="Modal__content"
-        style={{ "--max-width": `${props.maxWidth}px` }}
+        style={{ "--max-width": `${props.maxWidth}px` } as any}
         tabIndex={0}
       >
         {props.children}
