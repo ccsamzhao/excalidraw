@@ -1,12 +1,10 @@
-import "./Modal.scss";
-
 import clsx from "clsx";
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React from "react";
 import { createPortal } from "react-dom";
-import { THEME } from "../constants";
+import { useCreatePortalContainer } from "../hooks/useCreatePortalContainer";
 import { KEYS } from "../keys";
 import { AppState } from "../types";
-import { useDevice, useExcalidrawContainer } from "./App";
+import "./Modal.scss";
 
 export const Modal: React.FC<{
   className?: string;
@@ -17,8 +15,10 @@ export const Modal: React.FC<{
   theme?: AppState["theme"];
   closeOnClickOutside?: boolean;
 }> = (props) => {
-  const { theme = THEME.LIGHT, closeOnClickOutside = true } = props;
-  const modalRoot = useBodyRoot(theme);
+  const { closeOnClickOutside = true } = props;
+  const modalRoot = useCreatePortalContainer({
+    className: "excalidraw-modal-container",
+  });
 
   if (!modalRoot) {
     return null;
@@ -44,7 +44,7 @@ export const Modal: React.FC<{
       <div
         className="Modal__background"
         onClick={closeOnClickOutside ? props.onCloseRequest : undefined}
-      ></div>
+      />
       <div
         className="Modal__content"
         style={{ "--max-width": `${props.maxWidth}px` } as any}
@@ -55,44 +55,4 @@ export const Modal: React.FC<{
     </div>,
     modalRoot,
   );
-};
-
-const useBodyRoot = (theme: AppState["theme"]) => {
-  const [div, setDiv] = useState<HTMLDivElement | null>(null);
-
-  const device = useDevice();
-  const isMobileRef = useRef(device.isMobile);
-  isMobileRef.current = device.isMobile;
-
-  const { container: excalidrawContainer } = useExcalidrawContainer();
-
-  useLayoutEffect(() => {
-    if (div) {
-      div.classList.toggle("excalidraw--mobile", device.isMobile);
-    }
-  }, [div, device.isMobile]);
-
-  useLayoutEffect(() => {
-    const isDarkTheme =
-      !!excalidrawContainer?.classList.contains("theme--dark") ||
-      theme === "dark";
-    const div = document.createElement("div");
-
-    div.classList.add("excalidraw", "excalidraw-modal-container");
-    div.classList.toggle("excalidraw--mobile", isMobileRef.current);
-
-    if (isDarkTheme) {
-      div.classList.add("theme--dark");
-      div.classList.add("theme--dark-background-none");
-    }
-    document.body.appendChild(div);
-
-    setDiv(div);
-
-    return () => {
-      document.body.removeChild(div);
-    };
-  }, [excalidrawContainer, theme]);
-
-  return div;
 };

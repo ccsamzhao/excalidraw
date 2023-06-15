@@ -18,6 +18,8 @@ interface Window {
   EXCALIDRAW_EXPORT_SOURCE: string;
   EXCALIDRAW_THROTTLE_RENDER: boolean | undefined;
   gtag: Function;
+  sa_event: Function;
+  fathom: { trackEvent: Function };
 }
 
 interface CanvasRenderingContext2D {

@@ -2,7 +2,7 @@ import ReactDOM from "react-dom";
 import { FONT_FAMILY } from "../constants";
 import { ExcalidrawElement } from "../element/types";
 import ExcalidrawApp from "../excalidraw-app";
-import { defaultLang, t } from "../i18n";
+import { defaultLang } from "../i18n";
 import { CODES, KEYS } from "../keys";
 import { reseed } from "../random";
 import * as Renderer from "../renderer/renderScene";
@@ -14,6 +14,7 @@ import {
   fireEvent,
   render,
   screen,
+  togglePopover,
   waitFor,
 } from "./test-utils";
 
@@ -41,7 +42,6 @@ const checkpoint = (name: string) => {
     expect(element).toMatchSnapshot(`[${name}] element ${i}`),
   );
 };
-
 beforeEach(async () => {
   // Unmount ReactDOM from root
   ReactDOM.unmountComponentAtNode(document.getElementById("root")!);
@@ -158,13 +158,14 @@ describe("regression tests", () => {
     UI.clickTool("rectangle");
     mouse.down(10, 10);
     mouse.up(10, 10);
+    togglePopover("Background");
+    UI.clickOnTestId("color-yellow");
+    UI.clickOnTestId("color-red");
 
-    UI.clickLabeledElement("Background");
-    UI.clickLabeledElement(t("colors.fa5252"));
-    UI.clickLabeledElement("Stroke");
-    UI.clickLabeledElement(t("colors.5f3dc4"));
-    expect(API.getSelectedElement().backgroundColor).toBe("#fa5252");
-    expect(API.getSelectedElement().strokeColor).toBe("#5f3dc4");
+    togglePopover("Stroke");
+    UI.clickOnTestId("color-blue");
+    expect(API.getSelectedElement().backgroundColor).toBe("#ffc9c9");
+    expect(API.getSelectedElement().strokeColor).toBe("#1971c2");
   });
 
   it("click on an element and drag it", () => {
@@ -541,7 +542,7 @@ describe("regression tests", () => {
       expect(element.groupIds.length).toBe(1);
     }
 
-    mouse.reset();
+    mouse.moveTo(-10, -10); // the NW resizing handle is at [0, 0], so moving further
     mouse.down();
     mouse.restorePosition(...end);
     mouse.up();
@@ -665,7 +666,7 @@ describe("regression tests", () => {
     UI.clickTool("text");
     expect(h.state.currentItemFontFamily).toEqual(FONT_FAMILY.Kalam);
     fireEvent.click(screen.getByTitle(/code/i));
-    expect(h.state.currentItemFontFamily).toEqual(FONT_FAMILY.Cascadia);
+    expect(h.state.currentItemFontFamily).toEqual(FONT_FAMILY["Jetbrains mono"]);
   });
 
   it("deselects selected element, on pointer up, when click hits element bounding box but doesn't hit the element", () => {
@@ -755,8 +756,8 @@ describe("regression tests", () => {
 
   it(
     "given selected element A with lower z-index than unselected element B and given B is partially over A " +
-      "when clicking intersection between A and B " +
-      "B should be selected on pointer up",
+    "when clicking intersection between A and B " +
+    "B should be selected on pointer up",
     () => {
       // set background color since default is transparent
       // and transparent elements can't be selected by clicking inside of them
@@ -793,8 +794,8 @@ describe("regression tests", () => {
 
   it(
     "given selected element A with lower z-index than unselected element B and given B is partially over A " +
-      "when dragging on intersection between A and B " +
-      "A should be dragged and keep being selected",
+    "when dragging on intersection between A and B " +
+    "A should be dragged and keep being selected",
     () => {
       const rect1 = API.createElement({
         type: "rectangle",
@@ -948,8 +949,8 @@ describe("regression tests", () => {
 
   it(
     "given a group of selected elements with an element that is not selected inside the group common bounding box " +
-      "when element that is not selected is clicked " +
-      "should switch selection to not selected element on pointer up",
+    "when element that is not selected is clicked " +
+    "should switch selection to not selected element on pointer up",
     () => {
       UI.clickTool("rectangle");
       mouse.down();
@@ -981,14 +982,14 @@ describe("regression tests", () => {
 
   it(
     "given a selected element A and a not selected element B with higher z-index than A " +
-      "and given B partially overlaps A " +
-      "when there's a shift-click on the overlapped section B is added to the selection",
+    "and given B partially overlaps A " +
+    "when there's a shift-click on the overlapped section B is added to the selection",
     () => {
       UI.clickTool("rectangle");
       // change background color since default is transparent
       // and transparent elements can't be selected by clicking inside of them
-      UI.clickLabeledElement("Background");
-      UI.clickLabeledElement(t("colors.fa5252"));
+      togglePopover("Background");
+      UI.clickOnTestId("color-red");
       mouse.down();
       mouse.up(1000, 1000);
 
@@ -1087,15 +1088,14 @@ describe("regression tests", () => {
     assertSelectedElements(rect3);
   });
 
-  it("should show fill icons when element has non transparent background", () => {
+  it("should show fill icons when element has non transparent background", async () => {
     UI.clickTool("rectangle");
     expect(screen.queryByText(/fill/i)).not.toBeNull();
     mouse.down();
     mouse.up(10, 10);
     expect(screen.queryByText(/fill/i)).toBeNull();
-
-    UI.clickLabeledElement("Background");
-    UI.clickLabeledElement(t("colors.fa5252"));
+    togglePopover("Background");
+    UI.clickOnTestId("color-red");
     // select rectangle
     mouse.reset();
     mouse.click();
@@ -1105,8 +1105,8 @@ describe("regression tests", () => {
 
 it(
   "given element A and group of elements B and given both are selected " +
-    "when user clicks on B, on pointer up " +
-    "only elements from B should be selected",
+  "when user clicks on B, on pointer up " +
+  "only elements from B should be selected",
   () => {
     const rect1 = UI.createElement("rectangle", { y: 0 });
     const rect2 = UI.createElement("rectangle", { y: 30 });
@@ -1133,8 +1133,8 @@ it(
 
 it(
   "given element A and group of elements B and given both are selected " +
-    "when user shift-clicks on B, on pointer up " +
-    "only element A should be selected",
+  "when user shift-clicks on B, on pointer up " +
+  "only element A should be selected",
   () => {
     UI.clickTool("rectangle");
     mouse.down();

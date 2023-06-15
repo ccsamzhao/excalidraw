@@ -6,6 +6,7 @@ import {
   FONT_FAMILY,
   TEXT_ALIGN,
   VERTICAL_ALIGN,
+  isSafari,
 } from "../constants";
 import { getElementAbsoluteCoords } from "../element";
 import { getSelectedElements } from "../scene";
@@ -36,6 +37,7 @@ import {
   NonDeletedExcalidrawElement,
 } from "./types";
 
+
 export const normalizeText = (text: string) => {
   return (
     text
@@ -61,12 +63,13 @@ export const redrawTextBoundingBox = (
     text: textElement.text,
     width: textElement.width,
     height: textElement.height,
+    baseline: textElement.baseline,
   };
 
   boundTextUpdates.text = textElement.text;
 
   if (container) {
-    maxWidth = getMaxContainerWidth(container);
+    maxWidth = getBoundTextMaxWidth(container);
     boundTextUpdates.text = wrapText(
       textElement.originalText,
       getFontString(textElement),
@@ -81,37 +84,31 @@ export const redrawTextBoundingBox = (
 
   boundTextUpdates.width = metrics.width;
   boundTextUpdates.height = metrics.height;
+  boundTextUpdates.baseline = metrics.baseline;
 
   if (container) {
-    if (isArrowElement(container)) {
-      const centerX = textElement.x + textElement.width / 2;
-      const centerY = textElement.y + textElement.height / 2;
-      const diffWidth = metrics.width - textElement.width;
-      const diffHeight = metrics.height - textElement.height;
-      boundTextUpdates.x = centerY - (textElement.height + diffHeight) / 2;
-      boundTextUpdates.y = centerX - (textElement.width + diffWidth) / 2;
-    } else {
-      const containerDims = getContainerDims(container);
-      let maxContainerHeight = getMaxContainerHeight(container);
+    const containerDims = getContainerDims(container);
+    const maxContainerHeight = getBoundTextMaxHeight(
+      container,
+      textElement as ExcalidrawTextElementWithContainer,
+    );
 
-      let nextHeight = containerDims.height;
-      if (metrics.height > maxContainerHeight) {
-        nextHeight = computeContainerDimensionForBoundText(
-          metrics.height,
-          container.type,
-        );
-        mutateElement(container, { height: nextHeight });
-        maxContainerHeight = getMaxContainerHeight(container);
-        updateOriginalContainerCache(container.id, nextHeight);
-      }
-      const updatedTextElement = {
-        ...textElement,
-        ...boundTextUpdates,
-      } as ExcalidrawTextElementWithContainer;
-      const { x, y } = computeBoundTextPosition(container, updatedTextElement);
-      boundTextUpdates.x = x;
-      boundTextUpdates.y = y;
+    let nextHeight = containerDims.height;
+    if (metrics.height > maxContainerHeight) {
+      nextHeight = computeContainerDimensionForBoundText(
+        metrics.height,
+        container.type,
+      );
+      mutateElement(container, { height: nextHeight });
+      updateOriginalContainerCache(container.id, nextHeight);
     }
+    const updatedTextElement = {
+      ...textElement,
+      ...boundTextUpdates,
+    } as ExcalidrawTextElementWithContainer;
+    const { x, y } = computeBoundTextPosition(container, updatedTextElement);
+    boundTextUpdates.x = x;
+    boundTextUpdates.y = y;
   }
 
   mutateElement(textElement, boundTextUpdates);
@@ -183,9 +180,13 @@ export const handleBindTextResize = (
     let nextHeight = textElement.height;
     let nextWidth = textElement.width;
     const containerDims = getContainerDims(container);
-    const maxWidth = getMaxContainerWidth(container);
-    const maxHeight = getMaxContainerHeight(container);
+    const maxWidth = getBoundTextMaxWidth(container);
+    const maxHeight = getBoundTextMaxHeight(
+      container,
+      textElement as ExcalidrawTextElementWithContainer,
+    );
     let containerHeight = containerDims.height;
+    let nextBaseLine = textElement.baseline;
     if (transformHandleType !== "n" && transformHandleType !== "s") {
       if (text) {
         text = wrapText(
@@ -194,13 +195,14 @@ export const handleBindTextResize = (
           maxWidth,
         );
       }
-      const dimensions = measureText(
+      const metrics = measureText(
         text,
         getFontString(textElement),
         textElement.lineHeight,
       );
-      nextHeight = dimensions.height;
-      nextWidth = dimensions.width;
+      nextHeight = metrics.height;
+      nextWidth = metrics.width;
+      nextBaseLine = metrics.baseline;
     }
     // increase height in case text element height exceeds
     if (nextHeight > maxHeight) {
@@ -213,9 +215,9 @@ export const handleBindTextResize = (
       // fix the y coord when resizing from ne/nw/n
       const updatedY =
         !isArrowElement(container) &&
-        (transformHandleType === "ne" ||
-          transformHandleType === "nw" ||
-          transformHandleType === "n")
+          (transformHandleType === "ne" ||
+            transformHandleType === "nw" ||
+            transformHandleType === "n")
           ? container.y - diff
           : container.y;
       mutateElement(container, {
@@ -228,6 +230,7 @@ export const handleBindTextResize = (
       text,
       width: nextWidth,
       height: nextHeight,
+      baseline: nextBaseLine,
     });
 
     if (!isArrowElement(container)) {
@@ -242,13 +245,19 @@ export const handleBindTextResize = (
   }
 };
 
-const computeBoundTextPosition = (
+export const computeBoundTextPosition = (
   container: ExcalidrawElement,
   boundTextElement: ExcalidrawTextElementWithContainer,
 ) => {
+  if (isArrowElement(container)) {
+    return LinearElementEditor.getBoundTextElementPosition(
+      container,
+      boundTextElement,
+    );
+  }
   const containerCoords = getContainerCoords(container);
-  const maxContainerHeight = getMaxContainerHeight(container);
-  const maxContainerWidth = getMaxContainerWidth(container);
+  const maxContainerHeight = getBoundTextMaxHeight(container, boundTextElement);
+  const maxContainerWidth = getBoundTextMaxWidth(container);
 
   let x;
   let y;
@@ -288,8 +297,59 @@ export const measureText = (
   const fontSize = parseFloat(font);
   const height = getTextHeight(text, fontSize, lineHeight);
   const width = getTextWidth(text, font);
+  const baseline = measureBaseline(text, font, lineHeight);
+  return { width, height, baseline };
+};
 
-  return { width, height };
+export const measureBaseline = (
+  text: string,
+  font: FontString,
+  lineHeight: ExcalidrawTextElement["lineHeight"],
+  wrapInContainer?: boolean,
+) => {
+  const container = document.createElement("div");
+  container.style.position = "absolute";
+  container.style.whiteSpace = "pre";
+  container.style.font = font;
+  container.style.minHeight = "1em";
+  if (wrapInContainer) {
+    container.style.overflow = "hidden";
+    container.style.wordBreak = "break-word";
+    container.style.whiteSpace = "pre-wrap";
+  }
+
+  container.style.lineHeight = String(lineHeight);
+
+  container.innerText = text;
+
+  // Baseline is important for positioning text on canvas
+  document.body.appendChild(container);
+
+  const span = document.createElement("span");
+  span.style.display = "inline-block";
+  span.style.overflow = "hidden";
+  span.style.width = "1px";
+  span.style.height = "1px";
+  container.appendChild(span);
+  let baseline = span.offsetTop + span.offsetHeight;
+  const height = container.offsetHeight;
+
+  if (isSafari) {
+    const canvasHeight = getTextHeight(text, parseFloat(font), lineHeight);
+    const fontSize = parseFloat(font);
+    // In Safari the font size gets rounded off when rendering hence calculating the safari height and shifting the baseline if it differs
+    // from the actual canvas height
+    const domHeight = getTextHeight(text, Math.round(fontSize), lineHeight);
+    if (canvasHeight > height) {
+      baseline += canvasHeight - domHeight;
+    }
+
+    if (height > canvasHeight) {
+      baseline -= domHeight - canvasHeight;
+    }
+  }
+  document.body.removeChild(container);
+  return baseline;
 };
 
 /**
@@ -359,6 +419,24 @@ export const getTextHeight = (
   return getLineHeightInPx(fontSize, lineHeight) * lineCount;
 };
 
+export const parseTokens = (text: string) => {
+  // Splitting words containing "-" as those are treated as separate words
+  // by css wrapping algorithm eg non-profit => non-, profit
+  const words = text.split("-");
+  if (words.length > 1) {
+    // non-proft org => ['non-', 'profit org']
+    words.forEach((word, index) => {
+      if (index !== words.length - 1) {
+        words[index] = word += "-";
+      }
+    });
+  }
+  // Joining the words with space and splitting them again with space to get the
+  // final list of tokens
+  // ['non-', 'profit org'] =>,'non- proft org' => ['non-','profit','org']
+  return words.join(" ").split(" ");
+};
+
 export const wrapText = (text: string, font: FontString, maxWidth: number) => {
   // if maxWidth is not finite or NaN which can happen in case of bugs in
   // computation, we need to make sure we don't continue as we'll end up
@@ -384,17 +462,16 @@ export const wrapText = (text: string, font: FontString, maxWidth: number) => {
     currentLine = "";
     currentLineWidthTillNow = 0;
   };
-
   originalLines.forEach((originalLine) => {
     const currentLineWidth = getTextWidth(originalLine, font);
 
-    //Push the line if its <= maxWidth
+    // Push the line if its <= maxWidth
     if (currentLineWidth <= maxWidth) {
       lines.push(originalLine);
       return; // continue
     }
-    const words = originalLine.split(" ");
 
+    const words = parseTokens(originalLine);
     resetParams();
 
     let index = 0;
@@ -412,6 +489,7 @@ export const wrapText = (text: string, font: FontString, maxWidth: number) => {
       else if (currentWordWidth > maxWidth) {
         // push current line since the current word exceeds the max width
         // so will be appended in next line
+
         push(currentLine);
 
         resetParams();
@@ -432,15 +510,15 @@ export const wrapText = (text: string, font: FontString, maxWidth: number) => {
             currentLine += currentChar;
           }
         }
-
         // push current line if appending space exceeds max width
         if (currentLineWidthTillNow + spaceWidth >= maxWidth) {
           push(currentLine);
           resetParams();
-        } else {
           // space needs to be appended before next word
           // as currentLine contains chars which couldn't be appended
-          // to previous line
+          // to previous line unless the line ends with hyphen to sync
+          // with css word-wrap
+        } else if (!currentLine.endsWith("-")) {
           currentLine += " ";
           currentLineWidthTillNow += spaceWidth;
         }
@@ -458,12 +536,23 @@ export const wrapText = (text: string, font: FontString, maxWidth: number) => {
             break;
           }
           index++;
-          currentLine += `${word} `;
+
+          // if word ends with "-" then we don't need to add space
+          // to sync with css word-wrap
+          const shouldAppendSpace = !word.endsWith("-");
+          currentLine += word;
+
+          if (shouldAppendSpace) {
+            currentLine += " ";
+          }
 
           // Push the word if appending space exceeds max width
           if (currentLineWidthTillNow + spaceWidth >= maxWidth) {
-            const word = currentLine.slice(0, -1);
-            push(word);
+            if (shouldAppendSpace) {
+              lines.push(currentLine.slice(0, -1));
+            } else {
+              lines.push(currentLine);
+            }
             resetParams();
             break;
           }
@@ -567,7 +656,7 @@ export const getApproxCharsToFitInWidth = (font: FontString, width: number) => {
 export const getBoundTextElementId = (container: ExcalidrawElement | null) => {
   return container?.boundElements?.length
     ? container?.boundElements?.filter((ele) => ele.type === "text")[0]?.id ||
-        null
+    null
     : null;
 };
 
@@ -589,8 +678,8 @@ export const getBoundTextElement = (element: ExcalidrawElement | null) => {
 export const getContainerElement = (
   element:
     | (ExcalidrawElement & {
-        containerId: ExcalidrawElement["id"] | null;
-      })
+      containerId: ExcalidrawElement["id"] | null;
+    })
     | null,
 ) => {
   if (!element) {
@@ -755,10 +844,12 @@ export const getTextBindableContainerAtPosition = (
     const [x1, y1, x2, y2] = getElementAbsoluteCoords(elements[index]);
     if (
       isArrowElement(elements[index]) &&
-      isHittingElementNotConsideringBoundingBox(elements[index], appState, [
-        x,
-        y,
-      ])
+      isHittingElementNotConsideringBoundingBox(
+        elements[index],
+        appState,
+        null,
+        [x, y],
+      )
     ) {
       hitElement = elements[index];
       break;
@@ -801,18 +892,10 @@ export const computeContainerDimensionForBoundText = (
   return dimension + padding;
 };
 
-export const getMaxContainerWidth = (container: ExcalidrawElement) => {
+export const getBoundTextMaxWidth = (container: ExcalidrawElement) => {
   const width = getContainerDims(container).width;
   if (isArrowElement(container)) {
-    const containerWidth = width - BOUND_TEXT_PADDING * 8 * 2;
-    if (containerWidth <= 0) {
-      const boundText = getBoundTextElement(container);
-      if (boundText) {
-        return boundText.width;
-      }
-      return BOUND_TEXT_PADDING * 8 * 2;
-    }
-    return containerWidth;
+    return width - BOUND_TEXT_PADDING * 8 * 2;
   }
 
   if (container.type === "ellipse") {
@@ -829,16 +912,15 @@ export const getMaxContainerWidth = (container: ExcalidrawElement) => {
   return width - BOUND_TEXT_PADDING * 2;
 };
 
-export const getMaxContainerHeight = (container: ExcalidrawElement) => {
+export const getBoundTextMaxHeight = (
+  container: ExcalidrawElement,
+  boundTextElement: ExcalidrawTextElementWithContainer,
+) => {
   const height = getContainerDims(container).height;
   if (isArrowElement(container)) {
     const containerHeight = height - BOUND_TEXT_PADDING * 8 * 2;
     if (containerHeight <= 0) {
-      const boundText = getBoundTextElement(container);
-      if (boundText) {
-        return boundText.height;
-      }
-      return BOUND_TEXT_PADDING * 8 * 2;
+      return boundTextElement.height;
     }
     return height;
   }
@@ -886,13 +968,13 @@ const DEFAULT_LINE_HEIGHT = {
   // Gecko if all over the place.
   [FONT_FAMILY.Helvetica]: 1.15 as ExcalidrawTextElement["lineHeight"],
   // ~1.2 is the average for Virgil in WebKit and Blink, and kinda Gecko too
-  [FONT_FAMILY.Cascadia]: 1.2 as ExcalidrawTextElement["lineHeight"],
+  [FONT_FAMILY["Jetbrains mono"]]: 1.2 as ExcalidrawTextElement["lineHeight"],
 
-  [FONT_FAMILY["Edu QLD Beginner"]]: 1.5 as ExcalidrawTextElement["lineHeight"],
+  [FONT_FAMILY.Inter]: 1.5 as ExcalidrawTextElement["lineHeight"],
 };
 
 export const getDefaultLineHeight = (fontFamily: FontFamilyValues) => {
-  if (fontFamily) {
+  if (fontFamily in DEFAULT_LINE_HEIGHT) {
     return DEFAULT_LINE_HEIGHT[fontFamily];
   }
   return DEFAULT_LINE_HEIGHT[DEFAULT_FONT_FAMILY];
