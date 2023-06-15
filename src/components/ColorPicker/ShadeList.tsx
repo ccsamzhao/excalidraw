@@ -57,7 +57,11 @@ export const ShadeList = ({ hex, onChange, palette }: ShadeListProps) => {
               )}
               aria-label="Shade"
               title={`${colorName} - ${i + 1}`}
-              style={color ? { "--swatch-color": color } as React.CSSProperties : undefined}
+              style={
+                color
+                  ? ({ "--swatch-color": color } as React.CSSProperties)
+                  : undefined
+              }
               onClick={() => {
                 onChange(color);
                 setActiveColorPickerSection("shades");

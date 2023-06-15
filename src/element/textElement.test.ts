@@ -427,6 +427,6 @@ describe("Test getDefaultLineHeight", () => {
   });
 
   it("should return correct line height", () => {
-    expect(getDefaultLineHeight(FONT_FAMILY["Monolisa"])).toBe(1.2);
+    expect(getDefaultLineHeight(FONT_FAMILY.Monolisa)).toBe(1.2);
   });
 });

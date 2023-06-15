@@ -130,10 +130,10 @@ const getFormValue = function <T>(
     (editingElement && getAttribute(editingElement)) ??
     (isSomeElementSelected(nonDeletedElements, appState)
       ? getCommonAttributeOfSelectedElements(
-        nonDeletedElements,
-        appState,
-        getAttribute,
-      )
+          nonDeletedElements,
+          appState,
+          getAttribute,
+        )
       : defaultValue) ??
     defaultValue
   );
@@ -153,8 +153,8 @@ const offsetElementAfterFontResize = (
         prevElement.textAlign === "left"
           ? prevElement.x
           : prevElement.x +
-          (prevElement.width - nextElement.width) /
-          (prevElement.textAlign === "center" ? 2 : 1),
+            (prevElement.width - nextElement.width) /
+              (prevElement.textAlign === "center" ? 2 : 1),
       // centering vertically is non-standard, but for Excalidraw I think
       // it makes sense
       y: prevElement.y + (prevElement.height - nextElement.height) / 2,
@@ -221,8 +221,8 @@ export const actionChangeStrokeColor = register({
           (el) => {
             return hasStrokeColor(el.type)
               ? newElementWith(el, {
-                strokeColor: value.currentItemStrokeColor,
-              })
+                  strokeColor: value.currentItemStrokeColor,
+                })
               : el;
           },
           true,
@@ -333,8 +333,9 @@ export const actionChangeFillStyle = register({
           options={[
             {
               value: "hachure",
-              text: `${allElementsZigZag ? t("labels.zigzag") : t("labels.hachure")
-                } (${getShortcutKey("Alt-Click")})`,
+              text: `${
+                allElementsZigZag ? t("labels.zigzag") : t("labels.hachure")
+              } (${getShortcutKey("Alt-Click")})`,
               icon: allElementsZigZag ? FillZigZagIcon : FillHachureIcon,
               active: allElementsZigZag ? true : undefined,
             },
@@ -358,8 +359,8 @@ export const actionChangeFillStyle = register({
           onClick={(value, event) => {
             const nextValue =
               event.altKey &&
-                value === "hachure" &&
-                selectedElements.every((el) => el.fillStyle === "hachure")
+              value === "hachure" &&
+              selectedElements.every((el) => el.fillStyle === "hachure")
                 ? "zigzag"
                 : value;
 
@@ -692,27 +693,27 @@ export const actionChangeFontFamily = register({
       text: string;
       icon: JSX.Element;
     }[] = [
-        {
-          value: FONT_FAMILY.Kalam,
-          text: t("labels.handDrawn"),
-          icon: FreedrawIcon,
-        },
-        {
-          value: FONT_FAMILY.Inter,
-          text: t("labels.normal"),
-          icon: FontFamilyNormalIcon,
-        },
-        {
-          value: FONT_FAMILY["Monolisa"],
-          text: t("labels.code"),
-          icon: FontFamilyCodeIcon,
-        },
-        {
-          value: FONT_FAMILY["libre bodoni"],
-          text: t("labels.local"),
-          icon: FillHachureIcon,
-        },
-      ];
+      {
+        value: FONT_FAMILY.Kalam,
+        text: t("labels.handDrawn"),
+        icon: FreedrawIcon,
+      },
+      {
+        value: FONT_FAMILY.Inter,
+        text: t("labels.normal"),
+        icon: FontFamilyNormalIcon,
+      },
+      {
+        value: FONT_FAMILY.Monolisa,
+        text: t("labels.code"),
+        icon: FontFamilyCodeIcon,
+      },
+      {
+        value: FONT_FAMILY["libre bodoni"],
+        text: t("labels.local"),
+        icon: FillHachureIcon,
+      },
+    ];
 
     return (
       <fieldset>
@@ -905,10 +906,10 @@ export const actionChangeRoundness = register({
           roundness:
             value === "round"
               ? {
-                type: isUsingAdaptiveRadius(el.type)
-                  ? ROUNDNESS.ADAPTIVE_RADIUS
-                  : ROUNDNESS.PROPORTIONAL_RADIUS,
-              }
+                  type: isUsingAdaptiveRadius(el.type)
+                    ? ROUNDNESS.ADAPTIVE_RADIUS
+                    : ROUNDNESS.PROPORTIONAL_RADIUS,
+                }
               : null,
         }),
       ),
@@ -953,7 +954,7 @@ export const actionChangeRoundness = register({
               hasLegacyRoundness ? null : element.roundness ? "round" : "sharp",
             (canChangeRoundness(appState.activeTool.type) &&
               appState.currentItemRoundness) ||
-            null,
+              null,
           )}
           onChange={(value) => updateData(value)}
         />

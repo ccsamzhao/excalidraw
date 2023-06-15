@@ -336,14 +336,12 @@ const drawElementOnCanvas = (
           element.textAlign === "center"
             ? element.width / 2
             : element.textAlign === "right"
-              ? element.width
-              : 0;
+            ? element.width
+            : 0;
 
         // FIXME temporary hack
         context.textBaseline =
-          element.fontFamily === FONT_FAMILY.Kalam
-            ? "middle"
-            : "bottom";
+          element.fontFamily === FONT_FAMILY.Kalam ? "middle" : "bottom";
 
         const lineHeightPx = getLineHeightInPx(
           element.fontSize,
@@ -388,8 +386,8 @@ type ElementShapes = {
 
 export const getShapeForElement = <T extends ExcalidrawElement>(element: T) =>
   shapeCache.get(element) as T["type"] extends keyof ElementShapes
-  ? ElementShapes[T["type"]] | undefined
-  : Drawable | null | undefined;
+    ? ElementShapes[T["type"]] | undefined
+    : Drawable | null | undefined;
 
 export const setShapeForElement = <T extends ExcalidrawElement>(
   element: T,
@@ -411,8 +409,8 @@ export const generateRoughOptions = (
       element.strokeStyle === "dashed"
         ? getDashArrayDashed(element.strokeWidth)
         : element.strokeStyle === "dotted"
-          ? getDashArrayDotted(element.strokeWidth)
-          : undefined,
+        ? getDashArrayDotted(element.strokeWidth)
+        : undefined,
     // for non-solid strokes, disable multiStroke because it tends to make
     // dashes/dots overlay each other
     disableMultiStroke: element.strokeStyle !== "solid",
@@ -488,8 +486,10 @@ const generateElementShape = (
           const h = element.height;
           const r = getCornerRadius(Math.min(w, h), element);
           shape = generator.path(
-            `M ${r} 0 L ${w - r} 0 Q ${w} 0, ${w} ${r} L ${w} ${h - r
-            } Q ${w} ${h}, ${w - r} ${h} L ${r} ${h} Q 0 ${h}, 0 ${h - r
+            `M ${r} 0 L ${w - r} 0 Q ${w} 0, ${w} ${r} L ${w} ${
+              h - r
+            } Q ${w} ${h}, ${w - r} ${h} L ${r} ${h} Q 0 ${h}, 0 ${
+              h - r
             } L 0 ${r} Q 0 0, ${r} 0`,
             generateRoughOptions(element, true),
           );
@@ -521,18 +521,23 @@ const generateElementShape = (
           );
 
           shape = generator.path(
-            `M ${topX + verticalRadius} ${topY + horizontalRadius} L ${rightX - verticalRadius
+            `M ${topX + verticalRadius} ${topY + horizontalRadius} L ${
+              rightX - verticalRadius
             } ${rightY - horizontalRadius}
-            C ${rightX} ${rightY}, ${rightX} ${rightY}, ${rightX - verticalRadius
+            C ${rightX} ${rightY}, ${rightX} ${rightY}, ${
+              rightX - verticalRadius
             } ${rightY + horizontalRadius}
             L ${bottomX + verticalRadius} ${bottomY - horizontalRadius}
-            C ${bottomX} ${bottomY}, ${bottomX} ${bottomY}, ${bottomX - verticalRadius
+            C ${bottomX} ${bottomY}, ${bottomX} ${bottomY}, ${
+              bottomX - verticalRadius
             } ${bottomY - horizontalRadius}
             L ${leftX + verticalRadius} ${leftY + horizontalRadius}
-            C ${leftX} ${leftY}, ${leftX} ${leftY}, ${leftX + verticalRadius} ${leftY - horizontalRadius
+            C ${leftX} ${leftY}, ${leftX} ${leftY}, ${leftX + verticalRadius} ${
+              leftY - horizontalRadius
             }
             L ${topX - verticalRadius} ${topY + horizontalRadius}
-            C ${topX} ${topY}, ${topX} ${topY}, ${topX + verticalRadius} ${topY + horizontalRadius
+            C ${topX} ${topY}, ${topX} ${topY}, ${topX + verticalRadius} ${
+              topY + horizontalRadius
             }`,
             generateRoughOptions(element, true),
           );
@@ -821,17 +826,17 @@ const drawElementFromCanvas = (
     // Clear the bound text area
     tempCanvasContext.clearRect(
       -(boundTextElement.width / 2 + BOUND_TEXT_PADDING) *
-      window.devicePixelRatio *
-      zoom,
+        window.devicePixelRatio *
+        zoom,
       -(boundTextElement.height / 2 + BOUND_TEXT_PADDING) *
-      window.devicePixelRatio *
-      zoom,
+        window.devicePixelRatio *
+        zoom,
       (boundTextElement.width + BOUND_TEXT_PADDING * 2) *
-      window.devicePixelRatio *
-      zoom,
+        window.devicePixelRatio *
+        zoom,
       (boundTextElement.height + BOUND_TEXT_PADDING * 2) *
-      window.devicePixelRatio *
-      zoom,
+        window.devicePixelRatio *
+        zoom,
     );
 
     context.translate(cx, cy);
@@ -865,16 +870,16 @@ const drawElementFromCanvas = (
     context.drawImage(
       elementWithCanvas.canvas!,
       (x1 + renderConfig.scrollX) * window.devicePixelRatio -
-      (padding * elementWithCanvas.scale) / elementWithCanvas.scale,
+        (padding * elementWithCanvas.scale) / elementWithCanvas.scale,
       (y1 + renderConfig.scrollY) * window.devicePixelRatio -
-      (padding * elementWithCanvas.scale) / elementWithCanvas.scale,
+        (padding * elementWithCanvas.scale) / elementWithCanvas.scale,
       elementWithCanvas.canvas!.width / elementWithCanvas.scale,
       elementWithCanvas.canvas!.height / elementWithCanvas.scale,
     );
 
     if (
       process.env.REACT_APP_DEBUG_ENABLE_TEXT_CONTAINER_BOUNDING_BOX ===
-      "true" &&
+        "true" &&
       hasBoundTextElement(element)
     ) {
       const textElement = getBoundTextElement(
@@ -1234,7 +1239,8 @@ export const renderElementToSvg = (
       node.setAttribute("stroke-linecap", "round");
       node.setAttribute(
         "transform",
-        `translate(${offsetX || 0} ${offsetY || 0
+        `translate(${offsetX || 0} ${
+          offsetY || 0
         }) rotate(${degree} ${cx} ${cy})`,
       );
 
@@ -1312,7 +1318,8 @@ export const renderElementToSvg = (
         }
         node.setAttribute(
           "transform",
-          `translate(${offsetX || 0} ${offsetY || 0
+          `translate(${offsetX || 0} ${
+            offsetY || 0
           }) rotate(${degree} ${cx} ${cy})`,
         );
         if (
@@ -1352,7 +1359,8 @@ export const renderElementToSvg = (
       }
       node.setAttribute(
         "transform",
-        `translate(${offsetX || 0} ${offsetY || 0
+        `translate(${offsetX || 0} ${
+          offsetY || 0
         }) rotate(${degree} ${cx} ${cy})`,
       );
       node.setAttribute("stroke", "none");
@@ -1425,7 +1433,8 @@ export const renderElementToSvg = (
         g.appendChild(use);
         g.setAttribute(
           "transform",
-          `translate(${offsetX || 0} ${offsetY || 0
+          `translate(${offsetX || 0} ${
+            offsetY || 0
           }) rotate(${degree} ${cx} ${cy})`,
         );
 
@@ -1453,7 +1462,8 @@ export const renderElementToSvg = (
 
         node.setAttribute(
           "transform",
-          `translate(${offsetX || 0} ${offsetY || 0
+          `translate(${offsetX || 0} ${
+            offsetY || 0
           }) rotate(${degree} ${cx} ${cy})`,
         );
         const lines = element.text.replace(/\r\n?/g, "\n").split("\n");
@@ -1465,15 +1475,15 @@ export const renderElementToSvg = (
           element.textAlign === "center"
             ? element.width / 2
             : element.textAlign === "right"
-              ? element.width
-              : 0;
+            ? element.width
+            : 0;
         const direction = isRTL(element.text) ? "rtl" : "ltr";
         const textAnchor =
           element.textAlign === "center"
             ? "middle"
             : element.textAlign === "right" || direction === "rtl"
-              ? "end"
-              : "start";
+            ? "end"
+            : "start";
         for (let i = 0; i < lines.length; i++) {
           const text = svgRoot.ownerDocument!.createElementNS(SVG_NS, "text");
           text.textContent = lines[i];
@@ -1523,8 +1533,8 @@ export function getFreeDrawSvgPath(element: ExcalidrawFreeDrawElement) {
   const inputPoints = element.simulatePressure
     ? element.points
     : element.points.length
-      ? element.points.map(([x, y], i) => [x, y, element.pressures[i]])
-      : [[0, 0, 0.5]];
+    ? element.points.map(([x, y], i) => [x, y, element.pressures[i]])
+    : [[0, 0, 0.5]];
 
   // Consider changing the options for simulated pressure vs real pressure
   const options: StrokeOptions = {

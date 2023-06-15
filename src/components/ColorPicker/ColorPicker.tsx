@@ -38,8 +38,8 @@ export const getColor = (color: string): string | null => {
   return isValidColor(`#${color}`)
     ? `#${color}`
     : isValidColor(color)
-      ? color
-      : null;
+    ? color
+    : null;
 };
 
 interface ColorPickerProps {
@@ -173,9 +173,9 @@ const ColorPickerPopupContent = ({
                 return force === false || state
                   ? null
                   : {
-                    keepOpenOnAlt: false,
-                    onSelect: onChange,
-                  };
+                      keepOpenOnAlt: false,
+                      onSelect: onChange,
+                    };
               });
             }}
             onEscape={(event) => {
@@ -226,7 +226,9 @@ const ColorPickerTrigger = ({
         "is-transparent": color === "transparent" || !color,
       })}
       aria-label={label}
-      style={color ? { "--swatch-color": color } as React.CSSProperties : undefined}
+      style={
+        color ? ({ "--swatch-color": color } as React.CSSProperties) : undefined
+      }
       title={
         type === "elementStroke"
           ? t("labels.showStroke")

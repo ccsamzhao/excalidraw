@@ -86,7 +86,7 @@ export const CLASSES = {
 export const FONT_FAMILY = {
   Kalam: 1,
   Inter: 2,
-  "Monolisa": 3,
+  Monolisa: 3,
   "libre bodoni": 4,
 };
 

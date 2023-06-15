@@ -66,10 +66,15 @@ const PickerColorList = ({
               onChange(color);
               setActiveColorPickerSection("baseColors");
             }}
-            title={`${label}${color.startsWith("#") ? ` ${color}` : ""
-              } — ${keybinding}`}
+            title={`${label}${
+              color.startsWith("#") ? ` ${color}` : ""
+            } — ${keybinding}`}
             aria-label={`${label} — ${keybinding}`}
-            style={color ? { "--swatch-color": color } as React.CSSProperties : undefined}
+            style={
+              color
+                ? ({ "--swatch-color": color } as React.CSSProperties)
+                : undefined
+            }
             data-testid={`color-${key}`}
             key={key}
           >

@@ -37,7 +37,6 @@ import {
   NonDeletedExcalidrawElement,
 } from "./types";
 
-
 export const normalizeText = (text: string) => {
   return (
     text
@@ -215,9 +214,9 @@ export const handleBindTextResize = (
       // fix the y coord when resizing from ne/nw/n
       const updatedY =
         !isArrowElement(container) &&
-          (transformHandleType === "ne" ||
-            transformHandleType === "nw" ||
-            transformHandleType === "n")
+        (transformHandleType === "ne" ||
+          transformHandleType === "nw" ||
+          transformHandleType === "n")
           ? container.y - diff
           : container.y;
       mutateElement(container, {
@@ -656,7 +655,7 @@ export const getApproxCharsToFitInWidth = (font: FontString, width: number) => {
 export const getBoundTextElementId = (container: ExcalidrawElement | null) => {
   return container?.boundElements?.length
     ? container?.boundElements?.filter((ele) => ele.type === "text")[0]?.id ||
-    null
+        null
     : null;
 };
 
@@ -678,8 +677,8 @@ export const getBoundTextElement = (element: ExcalidrawElement | null) => {
 export const getContainerElement = (
   element:
     | (ExcalidrawElement & {
-      containerId: ExcalidrawElement["id"] | null;
-    })
+        containerId: ExcalidrawElement["id"] | null;
+      })
     | null,
 ) => {
   if (!element) {
@@ -968,7 +967,7 @@ const DEFAULT_LINE_HEIGHT = {
   // Gecko if all over the place.
   [FONT_FAMILY.Inter]: 1.15 as ExcalidrawTextElement["lineHeight"],
   // ~1.2 is the average for Virgil in WebKit and Blink, and kinda Gecko too
-  [FONT_FAMILY["Monolisa"]]: 1.2 as ExcalidrawTextElement["lineHeight"],
+  [FONT_FAMILY.Monolisa]: 1.2 as ExcalidrawTextElement["lineHeight"],
 
   [FONT_FAMILY["libre bodoni"]]: 1.5 as ExcalidrawTextElement["lineHeight"],
 };
