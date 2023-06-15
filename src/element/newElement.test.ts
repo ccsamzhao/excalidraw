@@ -81,7 +81,7 @@ describe("duplicating single elements", () => {
       fontSize: 20,
       fontFamily: FONT_FAMILY.Kalam,
       textAlign: "left",
-      verticalAlign: "top",
+      verticalAlign: "middle",
     });
 
     const copy = duplicateElement(null, new Map(), element);

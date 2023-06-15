@@ -1,13 +1,13 @@
 import clsx from "clsx";
 import { useAtom } from "jotai";
 import { useEffect, useRef } from "react";
+import { ColorPaletteCustom } from "../../colors";
+import { t } from "../../i18n";
+import HotkeyLabel from "./HotkeyLabel";
 import {
   activeColorPickerSectionAtom,
   getColorNameAndShadeFromColor,
 } from "./colorPickerUtils";
-import HotkeyLabel from "./HotkeyLabel";
-import { t } from "../../i18n";
-import { ColorPaletteCustom } from "../../colors";
 
 interface ShadeListProps {
   hex: string;
@@ -57,7 +57,7 @@ export const ShadeList = ({ hex, onChange, palette }: ShadeListProps) => {
               )}
               aria-label="Shade"
               title={`${colorName} - ${i + 1}`}
-              style={color ? { "--swatch-color": color } : undefined}
+              style={color ? { "--swatch-color": color } as React.CSSProperties : undefined}
               onClick={() => {
                 onChange(color);
                 setActiveColorPickerSection("shades");

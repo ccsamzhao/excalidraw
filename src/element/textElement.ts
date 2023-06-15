@@ -966,11 +966,11 @@ const DEFAULT_LINE_HEIGHT = {
   [FONT_FAMILY.Kalam]: 1.25 as ExcalidrawTextElement["lineHeight"],
   // ~1.15 is the average for Virgil in WebKit and Blink.
   // Gecko if all over the place.
-  [FONT_FAMILY.Helvetica]: 1.15 as ExcalidrawTextElement["lineHeight"],
+  [FONT_FAMILY.Inter]: 1.15 as ExcalidrawTextElement["lineHeight"],
   // ~1.2 is the average for Virgil in WebKit and Blink, and kinda Gecko too
-  [FONT_FAMILY["Jetbrains mono"]]: 1.2 as ExcalidrawTextElement["lineHeight"],
+  [FONT_FAMILY["Monolisa"]]: 1.2 as ExcalidrawTextElement["lineHeight"],
 
-  [FONT_FAMILY.Inter]: 1.5 as ExcalidrawTextElement["lineHeight"],
+  [FONT_FAMILY["libre bodoni"]]: 1.5 as ExcalidrawTextElement["lineHeight"],
 };
 
 export const getDefaultLineHeight = (fontFamily: FontFamilyValues) => {

@@ -1,23 +1,23 @@
-import { isInteractive, isTransparent, isWritableElement } from "../../utils";
-import { ExcalidrawElement } from "../../element/types";
-import { AppState } from "../../types";
-import { TopPicks } from "./TopPicks";
-import { Picker } from "./Picker";
 import * as Popover from "@radix-ui/react-popover";
-import { useAtom } from "jotai";
-import {
-  activeColorPickerSectionAtom,
-  ColorPickerType,
-} from "./colorPickerUtils";
-import { useDevice, useExcalidrawContainer } from "../App";
-import { ColorTuple, COLOR_PALETTE, ColorPaletteCustom } from "../../colors";
-import PickerHeading from "./PickerHeading";
-import { t } from "../../i18n";
 import clsx from "clsx";
+import { useAtom } from "jotai";
+import React, { useRef } from "react";
+import { COLOR_PALETTE, ColorPaletteCustom, ColorTuple } from "../../colors";
+import { ExcalidrawElement } from "../../element/types";
+import { t } from "../../i18n";
 import { jotaiScope } from "../../jotai";
-import { ColorInput } from "./ColorInput";
-import { useRef } from "react";
+import { AppState } from "../../types";
+import { isInteractive, isTransparent, isWritableElement } from "../../utils";
+import { useDevice, useExcalidrawContainer } from "../App";
 import { activeEyeDropperAtom } from "../EyeDropper";
+import { ColorInput } from "./ColorInput";
+import { Picker } from "./Picker";
+import PickerHeading from "./PickerHeading";
+import { TopPicks } from "./TopPicks";
+import {
+  ColorPickerType,
+  activeColorPickerSectionAtom,
+} from "./colorPickerUtils";
 
 import "./ColorPicker.scss";
 
@@ -38,8 +38,8 @@ export const getColor = (color: string): string | null => {
   return isValidColor(`#${color}`)
     ? `#${color}`
     : isValidColor(color)
-    ? color
-    : null;
+      ? color
+      : null;
 };
 
 interface ColorPickerProps {
@@ -173,9 +173,9 @@ const ColorPickerPopupContent = ({
                 return force === false || state
                   ? null
                   : {
-                      keepOpenOnAlt: false,
-                      onSelect: onChange,
-                    };
+                    keepOpenOnAlt: false,
+                    onSelect: onChange,
+                  };
               });
             }}
             onEscape={(event) => {
@@ -226,7 +226,7 @@ const ColorPickerTrigger = ({
         "is-transparent": color === "transparent" || !color,
       })}
       aria-label={label}
-      style={color ? { "--swatch-color": color } : undefined}
+      style={color ? { "--swatch-color": color } as React.CSSProperties : undefined}
       title={
         type === "elementStroke"
           ? t("labels.showStroke")

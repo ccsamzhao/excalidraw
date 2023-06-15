@@ -698,17 +698,17 @@ export const actionChangeFontFamily = register({
           icon: FreedrawIcon,
         },
         {
-          value: FONT_FAMILY.Helvetica,
+          value: FONT_FAMILY.Inter,
           text: t("labels.normal"),
           icon: FontFamilyNormalIcon,
         },
         {
-          value: FONT_FAMILY["Jetbrains mono"],
+          value: FONT_FAMILY["Monolisa"],
           text: t("labels.code"),
           icon: FontFamilyCodeIcon,
         },
         {
-          value: FONT_FAMILY.Inter,
+          value: FONT_FAMILY["libre bodoni"],
           text: t("labels.local"),
           icon: FillHachureIcon,
         },

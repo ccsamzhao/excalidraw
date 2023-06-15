@@ -1,10 +1,10 @@
 import clsx from "clsx";
-import { ColorPickerType } from "./colorPickerUtils";
 import {
   DEFAULT_CANVAS_BACKGROUND_PICKS,
   DEFAULT_ELEMENT_BACKGROUND_PICKS,
   DEFAULT_ELEMENT_STROKE_PICKS,
 } from "../../colors";
+import { ColorPickerType } from "./colorPickerUtils";
 
 interface TopPicksProps {
   onChange: (color: string) => void;
@@ -50,7 +50,7 @@ export const TopPicks = ({
             active: color === activeColor,
             "is-transparent": color === "transparent" || !color,
           })}
-          style={{ "--swatch-color": color }}
+          style={{ "--swatch-color": color } as React.CSSProperties}
           key={color}
           type="button"
           title={color}

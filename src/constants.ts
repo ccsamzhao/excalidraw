@@ -85,9 +85,9 @@ export const CLASSES = {
 // 1-based in case we ever do `if(element.fontFamily)`
 export const FONT_FAMILY = {
   Kalam: 1,
-  Helvetica: 2,
-  "Jetbrains mono": 3,
-  Inter: 4,
+  Inter: 2,
+  "Monolisa": 3,
+  "libre bodoni": 4,
 };
 
 export const THEME = {

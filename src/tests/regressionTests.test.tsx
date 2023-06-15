@@ -666,7 +666,7 @@ describe("regression tests", () => {
     UI.clickTool("text");
     expect(h.state.currentItemFontFamily).toEqual(FONT_FAMILY.Kalam);
     fireEvent.click(screen.getByTitle(/code/i));
-    expect(h.state.currentItemFontFamily).toEqual(FONT_FAMILY["Jetbrains mono"]);
+    expect(h.state.currentItemFontFamily).toEqual(FONT_FAMILY["Monolisa"]);
   });
 
   it("deselects selected element, on pointer up, when click hits element bounding box but doesn't hit the element", () => {

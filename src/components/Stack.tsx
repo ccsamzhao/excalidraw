@@ -1,6 +1,7 @@
+import "./Stack.scss";
+
 import clsx from "clsx";
 import React, { forwardRef } from "react";
-import "./Stack.scss";
 
 type StackProps = {
   children: React.ReactNode;
@@ -12,29 +13,27 @@ type StackProps = {
   ref: React.RefObject<HTMLDivElement>;
 };
 
-const RowStack = ({
-  children,
-  gap,
-  align,
-  justifyContent,
-  className,
-  style,
-}: StackProps) => {
-  return (
-    <div
-      className={clsx("Stack Stack_horizontal", className)}
-      style={{
-        "--gap": gap,
-        alignItems: align,
-        justifyContent,
-        ...style,
-      } as any
-      }
-    >
-      {children}
-    </div>
-  );
-};
+const RowStack = forwardRef(
+  (
+    { children, gap, align, justifyContent, className, style }: StackProps,
+    ref: React.ForwardedRef<HTMLDivElement>,
+  ) => {
+    return (
+      <div
+        className={clsx("Stack Stack_horizontal", className)}
+        style={{
+          "--gap": gap,
+          alignItems: align,
+          justifyContent,
+          ...style,
+        } as React.CSSProperties}
+        ref={ref}
+      >
+        {children}
+      </div>
+    );
+  },
+);
 
 const ColStack = forwardRef(
   (
@@ -49,7 +48,7 @@ const ColStack = forwardRef(
           justifyItems: align,
           justifyContent,
           ...style,
-        }}
+        } as React.CSSProperties}
         ref={ref}
       >
         {children}

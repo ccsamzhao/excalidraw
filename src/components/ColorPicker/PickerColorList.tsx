@@ -1,14 +1,14 @@
 import clsx from "clsx";
 import { useAtom } from "jotai";
 import { useEffect, useRef } from "react";
+import { ColorPaletteCustom } from "../../colors";
+import { t } from "../../i18n";
+import HotkeyLabel from "./HotkeyLabel";
 import {
   activeColorPickerSectionAtom,
   colorPickerHotkeyBindings,
   getColorNameAndShadeFromColor,
 } from "./colorPickerUtils";
-import HotkeyLabel from "./HotkeyLabel";
-import { ColorPaletteCustom } from "../../colors";
-import { t } from "../../i18n";
 
 interface PickerColorListProps {
   palette: ColorPaletteCustom;
@@ -66,11 +66,10 @@ const PickerColorList = ({
               onChange(color);
               setActiveColorPickerSection("baseColors");
             }}
-            title={`${label}${
-              color.startsWith("#") ? ` ${color}` : ""
-            } — ${keybinding}`}
+            title={`${label}${color.startsWith("#") ? ` ${color}` : ""
+              } — ${keybinding}`}
             aria-label={`${label} — ${keybinding}`}
-            style={color ? { "--swatch-color": color } : undefined}
+            style={color ? { "--swatch-color": color } as React.CSSProperties : undefined}
             data-testid={`color-${key}`}
             key={key}
           >

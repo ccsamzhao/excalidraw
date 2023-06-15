@@ -342,7 +342,7 @@ const drawElementOnCanvas = (
         // FIXME temporary hack
         context.textBaseline =
           element.fontFamily === FONT_FAMILY.Kalam
-            ? "ideographic"
+            ? "middle"
             : "bottom";
 
         const lineHeightPx = getLineHeightInPx(
