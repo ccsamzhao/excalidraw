@@ -26,4 +26,9 @@ src/packages/excalidraw/example/public/bundle.js
 src/packages/excalidraw/example/public/excalidraw-assets-dev
 src/packages/excalidraw/example/public/excalidraw.development.js
 .firebase/hosting.YnVpbGQ.cache
+packages/excalidraw/types
 coverage
+dev-dist
+html
+examples/**/bundle.*
+meta*.json
