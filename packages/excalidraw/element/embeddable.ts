@@ -1,8 +1,8 @@
 import { register } from "../actions/register";
 import { FONT_FAMILY, VERTICAL_ALIGN } from "../constants";
+import { setCursorForShape } from "../cursor";
 import { ExcalidrawProps } from "../types";
 import { getFontString, updateActiveTool } from "../utils";
-import { setCursorForShape } from "../cursor";
 import { newTextElement } from "./newElement";
 import { wrapText } from "./textElement";
 import { isIframeElement } from "./typeChecks";
@@ -226,7 +226,7 @@ export const createPlaceholderEmbeddableLabel = (
     Math.min(element.width / 2, element.width / text.length),
     element.width / 30,
   );
-  const fontFamily = FONT_FAMILY.Helvetica;
+  const fontFamily = FONT_FAMILY.Inter;
 
   const fontString = getFontString({
     fontSize,

@@ -1,4 +1,25 @@
 import rough from "roughjs/bin/rough";
+import { getDefaultAppState } from "../appState";
+import {
+  DEFAULT_EXPORT_PADDING,
+  FONT_FAMILY,
+  FRAME_STYLE,
+  SVG_NS,
+  THEME_FILTER,
+} from "../constants";
+import { serializeAsJSON } from "../data/json";
+import { newTextElement } from "../element";
+import {
+  Bounds,
+  getCommonBounds,
+  getElementAbsoluteCoords,
+} from "../element/bounds";
+import {
+  getInitializedImageElements,
+  updateImageCache,
+} from "../element/image";
+import { newElementWith } from "../element/mutateElement";
+import { isFrameElement, isFrameLikeElement } from "../element/typeChecks";
 import {
   ExcalidrawElement,
   ExcalidrawFrameLikeElement,
@@ -7,38 +28,17 @@ import {
   NonDeletedSceneElementsMap,
 } from "../element/types";
 import {
-  Bounds,
-  getCommonBounds,
-  getElementAbsoluteCoords,
-} from "../element/bounds";
-import { renderSceneToSvg } from "../renderer/staticSvgScene";
-import { arrayToMap, distance, getFontString, toBrandedType } from "../utils";
-import { AppState, BinaryFiles } from "../types";
-import {
-  DEFAULT_EXPORT_PADDING,
-  FONT_FAMILY,
-  FRAME_STYLE,
-  SVG_NS,
-  THEME_FILTER,
-} from "../constants";
-import { getDefaultAppState } from "../appState";
-import { serializeAsJSON } from "../data/json";
-import {
-  getInitializedImageElements,
-  updateImageCache,
-} from "../element/image";
-import {
   getElementsOverlappingFrame,
   getFrameLikeElements,
   getFrameLikeTitle,
   getRootElements,
 } from "../frame";
-import { newTextElement } from "../element";
-import { Mutable } from "../utility-types";
-import { newElementWith } from "../element/mutateElement";
-import { isFrameElement, isFrameLikeElement } from "../element/typeChecks";
-import { RenderableElementsMap } from "./types";
 import { renderStaticScene } from "../renderer/staticScene";
+import { renderSceneToSvg } from "../renderer/staticSvgScene";
+import { AppState, BinaryFiles } from "../types";
+import { Mutable } from "../utility-types";
+import { arrayToMap, distance, getFontString, toBrandedType } from "../utils";
+import { RenderableElementsMap } from "./types";
 
 const SVG_EXPORT_TAG = `<!-- svg-source:excalidraw -->`;
 
@@ -96,7 +96,7 @@ const addFrameLabelsAsTextElements = (
       let textElement: Mutable<ExcalidrawTextElement> = newTextElement({
         x: element.x,
         y: element.y - FRAME_STYLE.nameOffsetY,
-        fontFamily: FONT_FAMILY.Assistant,
+        fontFamily: FONT_FAMILY["libre bodoni"],
         fontSize: FRAME_STYLE.nameFontSize,
         lineHeight:
           FRAME_STYLE.nameLineHeight as ExcalidrawTextElement["lineHeight"],
@@ -339,8 +339,7 @@ export const exportToSvg = async (
   if (import.meta.env.VITE_IS_EXCALIDRAW_NPM_PACKAGE) {
     assetPath =
       window.EXCALIDRAW_ASSET_PATH ||
-      `https://unpkg.com/${import.meta.env.VITE_PKG_NAME}@${
-        import.meta.env.PKG_VERSION
+      `https://unpkg.com/${import.meta.env.VITE_PKG_NAME}@${import.meta.env.PKG_VERSION
       }`;
 
     if (assetPath?.startsWith("/")) {
@@ -362,9 +361,8 @@ export const exportToSvg = async (
     const cy = (y2 - y1) / 2 - (frame.y - y1);
 
     exportingFrameClipPath += `<clipPath id=${frame.id}>
-            <rect transform="translate(${frame.x + offsetX} ${
-      frame.y + offsetY
-    }) rotate(${frame.angle} ${cx} ${cy})"
+            <rect transform="translate(${frame.x + offsetX} ${frame.y + offsetY
+      }) rotate(${frame.angle} ${cx} ${cy})"
           width="${frame.width}"
           height="${frame.height}"
           >
@@ -425,10 +423,10 @@ export const exportToSvg = async (
       canvasBackgroundColor: viewBackgroundColor,
       embedsValidationStatus: renderEmbeddables
         ? new Map(
-            elementsForRender
-              .filter((element) => isFrameLikeElement(element))
-              .map((element) => [element.id, true]),
-          )
+          elementsForRender
+            .filter((element) => isFrameLikeElement(element))
+            .map((element) => [element.id, true]),
+        )
         : new Map(),
     },
   );

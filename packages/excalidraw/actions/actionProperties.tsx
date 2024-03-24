@@ -20,6 +20,7 @@ import {
   ArrowheadDiamondIcon,
   ArrowheadDiamondOutlineIcon,
   ArrowheadNoneIcon,
+  ArrowheadTriangleIcon,
   ArrowheadTriangleOutlineIcon,
   EdgeRoundIcon,
   EdgeSharpIcon,

@@ -6,14 +6,14 @@ import { EVENT } from "../constants";
 import { useUIAppState } from "../context/ui-appState";
 import { useCreatePortalContainer } from "../hooks/useCreatePortalContainer";
 import { useOutsideClick } from "../hooks/useOutsideClick";
+import { useStable } from "../hooks/useStable";
 import { KEYS } from "../keys";
 import { getSelectedElements } from "../scene";
 import { useApp, useExcalidrawContainer, useExcalidrawElements } from "./App";
-import { useStable } from "../hooks/useStable";
 
-import "./EyeDropper.scss";
-import { ColorPickerType } from "./ColorPicker/colorPickerUtils";
 import { ExcalidrawElement } from "../element/types";
+import { ColorPickerType } from "./ColorPicker/colorPickerUtils";
+import "./EyeDropper.scss";
 
 export type EyeDropperProperties = {
   keepOpenOnAlt: boolean;
@@ -229,7 +229,7 @@ export const EyeDropper: React.FC<{
   }
 
   return createPortal(
-    <div ref={ref} className="excalidraw-eye-dropper-preview" />,
+    <div ref={ref} className="excalidraw-eye-dropper-preview" ></div>,
     eyeDropperContainer,
   );
 };
