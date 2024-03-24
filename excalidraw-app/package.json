@@ -25,7 +25,6 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "dependencies": {},
   "prettier": "@excalidraw/prettier-config",
   "scripts": {
     "build-node": "node ./scripts/build-node.js",
